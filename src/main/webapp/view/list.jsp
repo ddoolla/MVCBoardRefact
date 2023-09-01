@@ -35,7 +35,7 @@
     </c:forEach>
     <tr>
         <td colspan="5">
-            <a href="/writePage.jsp">글작성</a>
+            <a href="/view/writePage.jsp">글작성</a>
         </td>
     </tr>
 </table>

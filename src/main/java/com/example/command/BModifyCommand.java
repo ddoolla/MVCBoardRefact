@@ -2,6 +2,7 @@ package com.example.command;
 
 import com.example.dao.BDao;
 import com.example.dto.BDto;
+import com.example.exception.CommandCustomException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -9,7 +10,7 @@ import javax.servlet.http.HttpServletResponse;
 public class BModifyCommand implements BCommand {
 
     @Override
-    public void execute(HttpServletRequest request, HttpServletResponse response) {
+    public void execute(HttpServletRequest request, HttpServletResponse response) throws CommandCustomException {
         BDao bDao = BDao.getInstance();
         BDto bDto = new BDto();
 
@@ -17,14 +18,11 @@ public class BModifyCommand implements BCommand {
         bDto.setbName(request.getParameter("bName"));
         bDto.setbTitle(request.getParameter("bTitle"));
         bDto.setbContent(request.getParameter("bContent"));
-//        System.out.println("bDto = " + bDto);
 
-        int cnt = bDao.modifyContent(bDto);
+        boolean result = bDao.modifyContent(bDto);
 
-        if (cnt == 1) {
-            System.out.println("게시글 수정 성공");
-        } else {
-            System.out.println("게시글 수정 실패");
+        if (!result) {
+            throw new CommandCustomException("게시물 수정 실패");
         }
 
     }

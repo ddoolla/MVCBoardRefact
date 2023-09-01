@@ -1,6 +1,8 @@
 package com.example.controller;
 
 import com.example.command.*;
+import com.example.exception.CommandCustomException;
+import com.example.exception.ControllerCustomException;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -8,6 +10,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+
 
 @WebServlet("*.do")
 public class BFrontController extends HttpServlet {
@@ -26,80 +29,60 @@ public class BFrontController extends HttpServlet {
 
     public void actionDo(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
-        String contextPath = request.getContextPath();
-        String uri = request.getRequestURI();
-        String command = uri.substring(contextPath.length());
+        String command = request.getServletPath(); // context-root 를 제외한 URI 리턴
         System.out.println("command = " + command);
 
-        String jspPage = "";
-        BCommand bCommand = null;
+        RoutingTarget target = router(command);
 
+        try {
+            target.getBCommand().execute(request, response);
+            request.getRequestDispatcher(target.getJspPage()).forward(request, response);
+
+        } catch (CommandCustomException | ControllerCustomException e) {
+            request.setAttribute("error_msg", e.getMessage());
+            request.getRequestDispatcher("/error/errorPage.jsp").forward(request, response);
+        }
+
+    } // -- actionDo()
+
+    private static class RoutingTarget {
+
+        private final BCommand BCommand;
+        private final String jspPage;
+
+        public RoutingTarget(BCommand BCommand, String jspPage) {
+            this.BCommand = BCommand;
+            this.jspPage = jspPage;
+        }
+
+        public BCommand getBCommand() {
+            return BCommand;
+        }
+
+        public String getJspPage() {
+            return jspPage;
+        }
+    }
+
+    public RoutingTarget router(String command) throws ControllerCustomException {
         switch (command) {
             case "/list.do":
-                bCommand = new BListCommand();
-                jspPage = "/list.jsp";
-                break;
+                return new RoutingTarget(new BListCommand(), "/view/list.jsp");
             case "/write.do":
-                bCommand = new BInsertCommand();
-                jspPage = "/list.do";
-                break;
+                return new RoutingTarget(new BInsertCommand(), "/list.do");
             case "/content_view.do":
-                bCommand = new BContentCommand();
-                jspPage = "/content_view.jsp";
-                break;
+                return new RoutingTarget(new BContentCommand(), "/view/content_view.jsp");
             case "/modify.do":
-                bCommand = new BModifyCommand();
-                jspPage = "/list.do";
-                break;
+                return new RoutingTarget(new BModifyCommand(), "/list.do");
             case "/delete.do":
-                bCommand = new BDeleteCommand();
-                jspPage = "/list.do";
-                break;
+                return new RoutingTarget(new BDeleteCommand(), "/list.do");
             case "/reply_view.do":
-                bCommand = new BReplyViewCommand();
-                jspPage = "/reply_view.jsp";
-                break;
+                return new RoutingTarget(new BReplyViewCommand(), "/view/reply_view.jsp");
             case "/reply.do":
-                bCommand = new BReplyCommand();
-                jspPage = "/list.do";
+                return new RoutingTarget(new BReplyCommand(), "/list.do");
+            default:
+                throw new ControllerCustomException("command 요청이 잘못되었습니다.");
         }
-        bCommand.execute(request, response);
+    } // -- router()
 
-//        if (command.equals("/list.do")) {
-//            BCommand bCommand = new BListCommand();
-//            bCommand.execute(request, response);
-//            jspPage = "/list.jsp";
-//
-//        } else if (command.equals("/write.do")) {
-//            BCommand bCommand = new BInsertCommand();
-//            bCommand.execute(request, response);
-//            jspPage = "/list.do";
-//
-//        } else if (command.equals("/content_view.do")) {
-//            BCommand bCommand = new BContentCommand();
-//            bCommand.execute(request, response);
-//            jspPage = "/content_view.jsp";
-//
-//        } else if (command.equals("/modify.do")) {
-//            BCommand bCommand = new BModifyCommand();
-//            bCommand.execute(request, response);
-//            jspPage = "/list.do";
-//
-//        } else if (command.equals("/delete.do")) {
-//            BCommand bCommand = new BDeleteCommand();
-//            bCommand.execute(request, response);
-//            jspPage = "/list.do";
-//
-//        } else if (command.equals("/reply_view.do")) {
-//            BCommand bCommand = new BReplyViewCommand();
-//            bCommand.execute(request, response);
-//            jspPage = "/reply_view.jsp";
-//        } else if (command.equals("/reply.do")) {
-////            BCommand bCommand = new BReplyCommand();
-////            bCommand.execute(request, response);
-////            jspPage = "/list.do";
-////        }
-
-        request.getRequestDispatcher(jspPage).forward(request, response);
-    }
 }

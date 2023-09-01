@@ -2,34 +2,27 @@ package com.example.command;
 
 import com.example.dao.BDao;
 import com.example.dto.BDto;
+import com.example.exception.CommandCustomException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.UnsupportedEncodingException;
 
 public class BInsertCommand implements BCommand {
 
     @Override
-    public void execute(HttpServletRequest request, HttpServletResponse response) {
+    public void execute(HttpServletRequest request, HttpServletResponse response) throws CommandCustomException {
         BDao bDao = BDao.getInstance();
         BDto bDto = new BDto();
 
-        try {
-            request.setCharacterEncoding("UTF-8");
-            bDto.setbName(request.getParameter("bName"));
-            bDto.setbTitle(request.getParameter("bTitle"));
-            bDto.setbContent(request.getParameter("bContent"));
+        bDto.setbName(request.getParameter("bName"));
+        bDto.setbTitle(request.getParameter("bTitle"));
+        bDto.setbContent(request.getParameter("bContent"));
 
-            int cnt = bDao.insertBoard(bDto);
+        boolean result = bDao.insertBoard(bDto);
 
-            if (cnt == 1) {
-                System.out.println("insertBoard() 성공");
-            } else {
-                System.out.println("insertBoard() 실패");
-            }
-
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
+        if (!result) {
+            throw new CommandCustomException("게시물 등록 실패");
         }
     }
+
 }

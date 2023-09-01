@@ -5,10 +5,7 @@ import com.example.dto.BDto;
 import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.ArrayList;
 
 public class BDao {
@@ -22,18 +19,6 @@ public class BDao {
         return bDao;
     }
 
-    public static Connection getConnection() {
-        Connection con = null;
-        try {
-            Context context = new InitialContext();
-            DataSource dataSource = (DataSource) context.lookup("java:comp/env/jdbc/mysql");
-            con = dataSource.getConnection();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return con;
-    } // getConnection()
 
     // 게시물 전체 조회
     public ArrayList<BDto> boardAll() {
@@ -71,13 +56,7 @@ public class BDao {
             System.out.println("boardAll() 실행 중 예외 발생");
 
         } finally {
-            try {
-                if (rs != null) rs.close();
-                if (stmt != null) stmt.close();
-                if (con != null) con.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            close(con, stmt, rs);
         }
         return bDtos;
     } // boardAll()
@@ -93,37 +72,30 @@ public class BDao {
         System.out.println("sql = " + sql);
         System.out.println("======================================");
 
-
         try {
             con = getConnection();
             stmt = con.createStatement();
             rs = stmt.executeQuery(sql);
 
-            rs.next();
-            String bId = rs.getString("bId");
-            String bName = rs.getString("bName");
-            String bTitle = rs.getString("bTitle");
-            String bContent = rs.getString("bContent");
-            String bDate = rs.getString("bDate");
-            String bHit = rs.getString("bHit");
-            String bGroup = rs.getString("bGroup");
-            String bStep = rs.getString("bStep");
-            String bIndent = rs.getString("bIndent");
-            bDto = new BDto(bId, bName, bTitle, bContent, bDate, bHit, bGroup, bStep, bIndent);
-//            System.out.println("bDto = " + bDto);
+            if (rs.next()) {
+                String bId = rs.getString("bId");
+                String bName = rs.getString("bName");
+                String bTitle = rs.getString("bTitle");
+                String bContent = rs.getString("bContent");
+                String bDate = rs.getString("bDate");
+                String bHit = rs.getString("bHit");
+                String bGroup = rs.getString("bGroup");
+                String bStep = rs.getString("bStep");
+                String bIndent = rs.getString("bIndent");
+                bDto = new BDto(bId, bName, bTitle, bContent, bDate, bHit, bGroup, bStep, bIndent);
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("selectOne() 중 예외 발생");
 
         } finally {
-            try {
-                if (rs != null) rs.close();
-                if (stmt != null) stmt.close();
-                if (con != null) con.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            close(con, stmt, rs);
         }
         return bDto;
     } // selectOne()
@@ -142,29 +114,23 @@ public class BDao {
             stmt = con.createStatement();
             rs = stmt.executeQuery(sql);
 
-            rs.next();
-
-            totalCnt = rs.getInt("totalCnt");
+            if (rs.next()) {
+                totalCnt = rs.getInt("totalCnt");
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("countAll() 중 예외 발생");
 
         } finally {
-            try {
-                if (rs != null) rs.close();
-                if (stmt != null) stmt.close();
-                if (con != null) con.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            close(con, stmt, rs);
         }
         return totalCnt;
     } // countAll()
 
 
     // 게시글 작성
-    public int insertBoard(BDto bDto) {
+    public boolean insertBoard(BDto bDto) {
         Connection con = null;
         PreparedStatement pstmt = null;
         String sql = "INSERT INTO mvc_board (bName, bTitle, bContent, bGroup) "
@@ -172,66 +138,49 @@ public class BDao {
         System.out.println("sql = " + sql);
         System.out.println("======================================");
 
-
-        int cnt = 0;
         try {
             con = getConnection();
             pstmt = con.prepareStatement(sql);
-
             pstmt.setString(1, bDto.getbName());
             pstmt.setString(2, bDto.getbTitle());
             pstmt.setString(3, bDto.getbContent());
 
-            cnt = pstmt.executeUpdate();
+            return pstmt.executeUpdate() == 1; //true
 
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("insertBoard() 중 예외 발생");
+            return false;
 
         } finally {
-            try {
-                if (pstmt != null) pstmt.close();
-                if (con != null) con.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            close(con, pstmt);
         }
-        return cnt;
     } // insertBoard()
 
     // 게시물 조회시 히트수 증가
-    public int hitUpdate(String id) {
+    public boolean hitUpdate(String id) {
         Connection con = null;
         PreparedStatement pstmt = null;
         String sql = "UPDATE mvc_board SET bHit = bHit + 1 WHERE bId = ?";
         System.out.println("sql = " + sql);
         System.out.println("======================================");
-        int cnt = 0;
         try {
             con = getConnection();
             pstmt = con.prepareStatement(sql);
-
             pstmt.setString(1, id);
 
-            cnt = pstmt.executeUpdate();
+            return pstmt.executeUpdate() == 1; // true;
 
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("hitUpdate() 중 예외 발생");
+            return false;
 
         } finally {
-            try {
-                if (pstmt != null) pstmt.close();
-                if (con != null) con.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            close(con, pstmt);
         }
-        return cnt;
     } // hitUpdate()
 
     // 게시글 수정
-    public int modifyContent(BDto bDto) {
+    public boolean modifyContent(BDto bDto) {
         Connection con = null;
         PreparedStatement pstmt = null;
         String sql = "UPDATE mvc_board SET "
@@ -239,66 +188,50 @@ public class BDao {
                 + " WHERE bId = ? ";
         System.out.println("sql = " + sql);
         System.out.println("======================================");
-        int cnt = 0;
         try {
             con = getConnection();
             pstmt = con.prepareStatement(sql);
-
             pstmt.setString(1, bDto.getbName());
             pstmt.setString(2, bDto.getbTitle());
             pstmt.setString(3, bDto.getbContent());
             pstmt.setString(4, bDto.getbId());
 
-            cnt = pstmt.executeUpdate();
+            return pstmt.executeUpdate() == 1; // true
 
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("modifyContent() 중 예외 발생");
+            return false;
 
         } finally {
-            try {
-                if (pstmt != null) pstmt.close();
-                if (con != null) con.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            close(con, pstmt);
         }
-        return cnt;
     } // modifyContent()
 
     // 게시글 삭제
-    public int deleteBoard(String id) {
+    public boolean deleteBoard(String id) {
         Connection con = null;
         PreparedStatement pstmt = null;
         String sql = "DELETE FROM mvc_board WHERE bId = ? ";
         System.out.println(sql);
         System.out.println("======================================");
-        int cnt = 0;
         try {
             con = getConnection();
             pstmt = con.prepareStatement(sql);
-
             pstmt.setString(1, id);
 
-            cnt = pstmt.executeUpdate();
+            return pstmt.executeUpdate() == 1;
 
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("deleteBoard() 중 예외 발생");
+            return false;
 
         } finally {
-            try {
-                if (pstmt != null) pstmt.close();
-                if (con != null) con.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            close(con, pstmt);
         }
-        return cnt;
     } // deleteBoard()
 
     // 답변 등록
-    public int insertReply(BDto bDto) {
+    public boolean insertReply(BDto bDto) {
 
         // 기존 답변 bStep + 1 업데이트
         // 최근 답변을 bStep = 1로 하고 기존 답변들의 bStep을 + 1씩 증가 시킴
@@ -310,11 +243,9 @@ public class BDao {
                 " VALUES (?, ?, ?, ?, ?, ?) ";
         System.out.println("sql = " + sql);
         System.out.println("======================================");
-        int cnt = 0;
         try {
             con = getConnection();
             pstmt = con.prepareStatement(sql);
-
             pstmt.setString(1, bDto.getbName());
             pstmt.setString(2, bDto.getbTitle());
             pstmt.setString(3, bDto.getbContent());
@@ -322,21 +253,15 @@ public class BDao {
             pstmt.setInt(5, Integer.parseInt(bDto.getbStep()) + 1);
             pstmt.setInt(6, Integer.parseInt(bDto.getbIndent()) + 1);
 
-            cnt = pstmt.executeUpdate();
+            return pstmt.executeUpdate() == 1; // true
 
         } catch (Exception e) {
             e.printStackTrace();
-            System.out.println("insertReply() 중 예외 발생");
+            return false;
 
         } finally {
-            try {
-                if (pstmt != null) pstmt.close();
-                if (con != null) con.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            close(con, pstmt);
         }
-        return cnt;
     } // insertReply()
 
     // 최근 순서에 맞게 스탭 업데이트
@@ -364,15 +289,43 @@ public class BDao {
             System.out.println("stepUpdate() 중 예외 발생");
 
         } finally {
-            try {
-                if (pstmt != null) pstmt.close();
-                if (con != null) con.close();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            close(con, pstmt);
         }
         return cnt;
     } // stepUpdate()
+
+
+    public static Connection getConnection() {
+        Connection con = null;
+        try {
+            Context context = new InitialContext();
+            DataSource dataSource = (DataSource) context.lookup("java:comp/env/jdbc/mysql");
+            con = dataSource.getConnection();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return con;
+    } // getConnection()
+
+    public static void close(Connection con, Statement stmt, ResultSet rs) {
+        try {
+            if (rs != null) rs.close();
+            if (stmt != null) stmt.close();
+            if (con != null) con.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void close(Connection con, PreparedStatement pstmt) {
+        try {
+            if (pstmt != null) pstmt.close();
+            if (con != null) con.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
 }
 
