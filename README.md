@@ -1,7 +1,6 @@
-# MVCBoardRefact 
-
-
-
+# MVCBoardRefact  
+## [jsp/servlet 유튜브 강의 게시판 프로젝트](https://youtu.be/Aw-lOlR0I28?si=5n7JQ1UmRWkj4Poo)  
+  
 ## 테이블 생성 쿼리 - MySQL
 ```
 create table mvc_board (
