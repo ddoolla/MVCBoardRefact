@@ -4,7 +4,21 @@
 
 ## 테이블 생성 쿼리 - MySQL
 ```
+create table mvc_board (
+	bId int(4) primary key auto_increment,
+	bName varchar(20),
+	bTitle varchar(100),
+	bContent varchar(300),
+	bDate datetime now(),
+	bHit int(4) default 0,
+	bGroup int(4),
+	bStep int(4),
+	bIndent int(4)
+);
 
+// 더미 데이터
+insert into mvc_board (bName, bTitle, bContent, bDate, bHit, bGroup, bStep, bIndent)
+values ('abcd', 'is title', 'is content', 0, last_insert_id( ) +1, 0, 0);
 ```
 
 ## /src/main/webapp/META-INF/context.xml
