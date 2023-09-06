@@ -12,14 +12,7 @@ public class BListCommand implements BCommand {
     @Override
     public void execute(HttpServletRequest request, HttpServletResponse response) {
         BDao bDao = BDao.getInstance();
-
-        // 게시물 리스트
-        ArrayList<BDto> bDtos = bDao.boardAll();
-
-        // 게시물 전체 개수
-        int totalCnt = bDao.countAll();
-
-        request.setAttribute("totalCnt", totalCnt);
-        request.setAttribute("bDtos", bDtos);
+        request.setAttribute("totalCnt", bDao.countAll());
+        request.setAttribute("bDtos", bDao.boardAll());
     }
 }
