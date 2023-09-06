@@ -8,22 +8,18 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class BModifyCommand implements BCommand {
-
-    @Override
-    public void execute(HttpServletRequest request, HttpServletResponse response) throws CommandCustomException {
-        BDao bDao = BDao.getInstance();
+    private BDto requestToBDto(HttpServletRequest request) {
         BDto bDto = new BDto();
-
         bDto.setbId(request.getParameter("bId"));
         bDto.setbName(request.getParameter("bName"));
         bDto.setbTitle(request.getParameter("bTitle"));
         bDto.setbContent(request.getParameter("bContent"));
-
-        boolean result = bDao.modifyContent(bDto);
-
-        if (!result) {
-            throw new CommandCustomException("게시물 수정 실패");
-        }
-
+        return bDto;
+    }
+    
+    @Override
+    public void execute(HttpServletRequest request, HttpServletResponse response) throws CommandCustomException {
+        boolean result = BDao.getInstance().modifyContent(requestToBDto(request));
+        if (result == false) throw new CommandCustomException(CommandError.EDIT, "게시물 수정 실패");
     }
 }
