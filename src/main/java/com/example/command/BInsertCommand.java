@@ -18,8 +18,7 @@ public class BInsertCommand implements BCommand {
     
     @Override
     public void execute(HttpServletRequest request, HttpServletResponse response) throws CommandCustomException {
-        BDao bDao = BDao.getInstance();
-        boolean result = bDao.insertBoard(requestToBDto(request));
+        boolean result = BDao.getInstance().insertBoard(requestToBDto(request));
         if (result == false) throw new CommandCustomException("게시물 등록 실패");
     }
 }
