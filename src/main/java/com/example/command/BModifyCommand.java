@@ -22,8 +22,8 @@ public class BModifyCommand implements BCommand {
         BDto requestDto = requestToBDto(request);
         
         BDao dao = BDao.getInstance();
-        boolean exists = dao.existsById(requestDto.getId());
-        if (exists == false) throw new CommandCustomException("게시물이 존재하지 않습니다.");
+//        boolean exists = dao.existsById(requestDto.getId());
+//        if (exists == false) throw new CommandCustomException("게시물이 존재하지 않습니다.");
             
         boolean result = dao.modifyContent(requestToBDto(request));
         if (result == false) throw new CommandCustomException("게시물 수정 실패");
