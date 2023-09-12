@@ -22,9 +22,10 @@ public class BDao {
 
 
     // 게시물 전체 조회
-    public ArrayList<BDto> boardAll() {
+    public ArrayList<BDto> boardAll(int start, int pageSize) {
         ArrayList<BDto> bDtos = new ArrayList<>();
-        String sql = "SELECT * FROM mvc_board ORDER BY bGroup DESC, bStep ASC, bIndent ASC";
+        String sql = "SELECT * FROM mvc_board ORDER BY bGroup DESC, bStep ASC, bIndent ASC "
+                + " LIMIT " + start + ", " + pageSize + "";
         System.out.println("sql = " + sql);
         System.out.println("======================================");
 
